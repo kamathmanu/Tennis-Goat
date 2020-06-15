@@ -1,0 +1,20 @@
+# IntelliJ
+.idea/
+
+# Classpath & Project
+.classpath
+.project
+
+# Log files
+*.log
+
+# JAR files
+.jar
+
+# design.md (This is not relevant for project display)
+design.md
+
+# Misc
+out/
+target/
+
