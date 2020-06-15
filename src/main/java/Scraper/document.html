@@ -1,0 +1,38 @@
+<!--These are snippets of HTML relevant for our purposes of scraping ranking data-->
+
+<div class="dropdown-holder">
+    <!--This dropdown label contains the list of all ranking dates (weeks, starting from August 1973-->
+    <!--Below, I've added a snippet of examples-->
+    <div class="dropdown-label">
+        2020.03.16
+    </div>
+    <ul class="dropdown" data-value="rankDate">
+        <li class="dropdown-default-label" style="display: none"> 2020.03.16</li>
+        <li data-value="2020-03-16" class="current"> 2020.03.16</li>
+        <li data-value="2020-03-09" class=""> 2020.03.09</li>
+        <li data-value="2020-03-02" class=""> 2020.03.02</li>
+        <li data-value="2020-02-24" class=""> 2020.02.24</li>
+        <li data-value="2020-02-17" class=""> 2020.02.17</li>
+    </ul>
+</div>
+
+<!--The div below encapsulates the main table of ATP rankings for a given week.-->
+<!--We're only interested in the No.1 ranked player (who isn't?), and we only care about his name-->
+<div id="singlesRanking" class="table-rankings" data-filtered-module="playerRankDetail">
+    <div class="table-rankings-wrapper" id="rankingDetailAjaxContainer">
+        <table class="mega-table">
+            <tbody>
+            <!-- Example No.1 for week 2020-03-16-->
+            <tr>
+                <td class="rank-cell"> 1</td>
+                <td class="player-cell"><a href="/en/players/novak-djokovic/d643/overview"
+                                           data-ga-label="Novak Djokovic">Novak Djokovic</a></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!--NOTE: once we get the rankDate, we can navigate to rankings for a given time like so:-->
+<!--https://www.atptour.com/en/rankings/singles?rankDate=2020-02-17&rankRange=0-100-->
+<!--Aside: how would this affect performance?-->
