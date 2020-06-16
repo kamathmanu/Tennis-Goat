@@ -17,7 +17,6 @@ public class Scraper {
         final String ATP_URL_SUFFIX = "&rankRange=0-100";
         // get the list of historical ranking weeks - basically from 1973-present.
         ArrayList<String> weeks = new ArrayList<String>();
-        final String garbage = "https://www.aTEEptour.com";
         try {
             final Document document = Jsoup.connect(ATP_URL_PREFIX).get();
             // extract the series of list items corresponding to the ranking weeks, from the dropdown menu
@@ -29,8 +28,17 @@ public class Scraper {
                 weeks.add(week);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            System.out.println("Error while connecting and parsing HTML: " + e);
+            System.exit(1);
+        } catch (Exception e) {
+            System.out.println("Fatal Error: " + e);
+            System.exit(1);
         }
+        // weeks might be null if no valid HTML
         Collections.reverse(weeks);
+        if (weeks.size() == 0) {
+            System.out.println("Please provide a historical time range! Cannot rank otherwise!");
+            return;
+        }
     }
 }
