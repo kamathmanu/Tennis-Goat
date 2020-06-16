@@ -40,5 +40,6 @@ public class Scraper {
             System.out.println("Please provide a historical time range! Cannot rank otherwise!");
             return;
         }
+        This will not compile
     }
 }
