@@ -40,6 +40,21 @@ public class Scraper {
             System.out.println("Please provide a historical time range! Cannot rank otherwise!");
             return;
         }
-        This will not compile
+        // dynamically update a player's ranking and animate his status
+        for (String week : weeks) {
+            String url = ATP_URL_PREFIX+"rankDate="+week+ATP_URL_SUFFIX;
+            try {
+                final Document document = Jsoup.connect(url).get();
+                Element player = document.getElementsByClass("player-cell").first();
+                if (player == null) {
+                    continue;
+                } else {
+                    System.out.println("Week: " + week + " No.1: "+ player.text());
+                }
+            } catch (IOException e) {
+                System.out.println("Error while connecting and parsing HTML: " + e);
+                System.exit(1);
+            }
+        }
     }
 }
