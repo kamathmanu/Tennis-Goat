@@ -1,3 +1,5 @@
+package scraper;
+
 // A POJO that encapsulates a ranking week and the name of the corresponding No.1 player
 public class WeeklyResult {
     private final String week;
