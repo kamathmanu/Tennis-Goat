@@ -1,6 +1,6 @@
-package tennisGOAT;
+package tennisgoat;
 
-import Scraper.Scraper;
+import scraper.Scraper;
 
 public class TennisGOAT {
     public static void main(String[] args) {

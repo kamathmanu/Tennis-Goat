@@ -1,13 +1,11 @@
-package Scraper;
+package scraper;
 
-import org.jsoup.Connection;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
 import java.io.IOException;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Collections;
 
@@ -17,8 +15,18 @@ public class Scraper {
         final String ATP_URL_SUFFIX = "&rankRange=0-100";
         // get the list of historical ranking weeks - basically from 1973-present.
         ArrayList<String> weeks = new ArrayList<String>();
+        weeks = getWeeksForRankings(ATP_URL_PREFIX, weeks);
+        // weeks might be null if no valid HTML
+        if (weeks.size() == 0) {
+            System.out.println("Please provide a historical time range! Cannot rank otherwise!");
+            return;
+        }
+        getPlayerNames(ATP_URL_PREFIX, ATP_URL_SUFFIX, weeks);
+    }
+    
+    static ArrayList getWeeksForRankings(String url, ArrayList<String> weeks) {
         try {
-            final Document document = Jsoup.connect(ATP_URL_PREFIX).get();
+            final Document document = Jsoup.connect(url).get();
             // extract the series of list items corresponding to the ranking weeks, from the dropdown menu
             Elements rankingWeeksList = document.getElementsByAttributeValue("data-value", "rankDate").select("ul li");
             for (Element li : rankingWeeksList) {
@@ -34,17 +42,18 @@ public class Scraper {
             System.out.println("Fatal Error: " + e);
             System.exit(1);
         }
-        // weeks might be null if no valid HTML
-        Collections.reverse(weeks);
-        if (weeks.size() == 0) {
-            System.out.println("Please provide a historical time range! Cannot rank otherwise!");
-            return;
-        }
+        Collections.reverse(weeks); // start from 1973.
+        return weeks;
+    }
+
+    static void getPlayerNames(String urlPrefix, String urlSuffix, ArrayList<String> weeks) {
         // dynamically update a player's ranking and animate his status
         for (String week : weeks) {
-            String url = ATP_URL_PREFIX+"rankDate="+week+ATP_URL_SUFFIX;
+            String url = urlPrefix+"rankDate="+week+urlSuffix;
             try {
-                final Document document = Jsoup.connect(url).get();
+                final int SECONDS_TO_MILLISECONDS = 1000;
+                // time out is an issue. ideally, try mutliple times to get the data??
+                final Document document = Jsoup.connect(url).timeout(180 * SECONDS_TO_MILLISECONDS).get();
                 Element player = document.getElementsByClass("player-cell").first();
                 if (player == null) {
                     continue;
