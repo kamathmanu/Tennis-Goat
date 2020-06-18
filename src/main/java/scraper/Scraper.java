@@ -14,8 +14,7 @@ public class Scraper {
         final String ATP_URL_PREFIX = "https://www.atptour.com/en/rankings/singles?";
         final String ATP_URL_SUFFIX = "&rankRange=0-100";
         // get the list of historical ranking weeks - basically from 1973-present.
-        ArrayList<String> weeks = new ArrayList<String>();
-        weeks = getWeeksForRankings(ATP_URL_PREFIX, weeks);
+        ArrayList<String> weeks = getWeeksForRankings(ATP_URL_PREFIX);
         // weeks might be null if no valid HTML
         if (weeks.size() == 0) {
             System.out.println("Please provide a historical time range! Cannot rank otherwise!");
@@ -24,7 +23,8 @@ public class Scraper {
         getPlayerNames(ATP_URL_PREFIX, ATP_URL_SUFFIX, weeks);
     }
     
-    static ArrayList getWeeksForRankings(String url, ArrayList<String> weeks) {
+    static ArrayList<String> getWeeksForRankings(String url) {
+        ArrayList<String> weeks = new ArrayList<String>();
         try {
             final Document document = Jsoup.connect(url).get();
             // extract the series of list items corresponding to the ranking weeks, from the dropdown menu
