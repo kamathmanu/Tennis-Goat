@@ -16,7 +16,7 @@ public class Scraper {
         // get the list of historical ranking weeks - basically from 1973-present.
         ArrayList<String> weeks = getWeeksForRankings(ATP_URL_PREFIX);
         // weeks might be null if no valid HTML
-        if (weeks.size() == 0) {
+        if (weeks.isEmpty()) {
             System.out.println("Please provide a historical time range! Cannot rank otherwise!");
             return;
         }
