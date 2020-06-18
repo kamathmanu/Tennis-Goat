@@ -2,8 +2,14 @@ package tennisgoat;
 
 import scraper.Scraper;
 
+import java.io.IOException;
+
 public class TennisGOAT {
     public static void main(String[] args) {
-        Scraper.main();
+        try {
+            Scraper.main();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

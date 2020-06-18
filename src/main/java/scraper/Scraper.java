@@ -5,65 +5,102 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
+import javax.print.Doc;
+import javax.swing.plaf.synth.SynthEditorPaneUI;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collections;
+import java.time.Duration;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Scraper {
-    public static void main() {
-        final String ATP_URL_PREFIX = "https://www.atptour.com/en/rankings/singles?";
-        final String ATP_URL_SUFFIX = "&rankRange=0-100";
-        // get the list of historical ranking weeks - basically from 1973-present.
-        ArrayList<String> weeks = getWeeksForRankings(ATP_URL_PREFIX);
-        // weeks might be null if no valid HTML
-        if (weeks.isEmpty()) {
-            System.out.println("Please provide a historical time range! Cannot rank otherwise!");
-            return;
-        }
-        getPlayerNames(ATP_URL_PREFIX, ATP_URL_SUFFIX, weeks);
-    }
-    
-    static ArrayList<String> getWeeksForRankings(String url) {
-        ArrayList<String> weeks = new ArrayList<String>();
-        try {
-            final Document document = Jsoup.connect(url).get();
-            // extract the series of list items corresponding to the ranking weeks, from the dropdown menu
-            Elements rankingWeeksList = document.getElementsByAttributeValue("data-value", "rankDate").select("ul li");
-            for (Element li : rankingWeeksList) {
-                // for accessing the relevant week's ranking page later, the rankDate= param in the URL takes '-'s
-                // instead of dots so we replace the characters here and then add them to out list.
-                String week = li.text().replaceAll("\\.", "-");
-                weeks.add(week);
-            }
-        } catch (IOException e) {
-            System.out.println("Error while connecting and parsing HTML: " + e);
-            System.exit(1);
-        } catch (Exception e) {
-            System.out.println("Fatal Error: " + e);
-            System.exit(1);
-        }
-        Collections.reverse(weeks); // start from 1973.
-        return weeks;
+    private final String urlPrefix;
+    private final String urlSuffix;
+    private final Duration timeout;
+
+    public Scraper(final String urlPrefix, final String urlSuffix, final Duration timeout) {
+        this.urlPrefix = urlPrefix;
+        this.urlSuffix = urlSuffix;
+        this.timeout = timeout;
     }
 
-    static void getPlayerNames(String urlPrefix, String urlSuffix, ArrayList<String> weeks) {
-        // dynamically update a player's ranking and animate his status
+    private List<WeeklyResult> scrape() throws IOException {
+        final List<String> weeks = loadWeeks();
+
+        return loadResults(weeks);
+    }
+
+    private List<String> loadWeeks() throws IOException {
+        final Document document = loadDocument(urlPrefix);
+        final Elements elements = selectRankingWeeksElements(document);
+        final List<String> weeks = extractWeeks(elements);
+
+        return noEmptyElseThrow(weeks);
+    }
+
+    private Document loadDocument(final String url) throws IOException {
+        return Jsoup.connect(url).timeout((int) timeout.toMillis()).get();
+    }
+
+    private Elements selectRankingWeeksElements(final Document document) {
+        // extract ranking weeks from the dropdown menu
+        final Elements result = document.getElementsByAttributeValue("data-value", "rankDate")
+                .select("ul li");
+
+        Collections.reverse(result);
+        return result;
+    }
+
+    private static List<String> extractWeeks(final Collection<Element> elements) {
+        // refer to https://winterbe.com/posts/2014/07/31/java8-stream-tutorial-examples/
+        // and https://www.baeldung.com/java-maps-streams.
+        return elements.stream()
+                        .map(Scraper::extractWeek)
+                        .collect(Collectors.toList()); //REVIEW
+    }
+
+    private static List<String> noEmptyElseThrow(final List<String> weeks) throws IOException{
+        if (weeks.isEmpty()) {
+            throw new IOException("Please provide a historical time range! Cannot rank otherwise!");
+        } else {
+            return weeks;
+        }
+    }
+
+    private List<WeeklyResult> loadResults(final List<String> weeks) throws IOException {
+        final List<WeeklyResult> result = new ArrayList<>();
         for (String week : weeks) {
-            String url = urlPrefix+"rankDate="+week+urlSuffix;
-            try {
-                final int SECONDS_TO_MILLISECONDS = 1000;
-                // time out is an issue. ideally, try mutliple times to get the data??
-                final Document document = Jsoup.connect(url).timeout(180 * SECONDS_TO_MILLISECONDS).get();
-                Element player = document.getElementsByClass("player-cell").first();
-                if (player == null) {
-                    continue;
-                } else {
-                    System.out.println("Week: " + week + " No.1: "+ player.text());
-                }
-            } catch (IOException e) {
-                System.out.println("Error while connecting and parsing HTML: " + e);
-                System.exit(1);
-            }
+            loadWeeklyResult(week).ifPresent(result::add); //REVIEW
+        }
+        return result;
+    }
+
+    private Optional<WeeklyResult> loadWeeklyResult(final String week) throws IOException {
+        final Document document = loadDocument(weeklyResultUrl(week));
+        final Element playerCell = selectPlayerCellElement(document);
+
+        return Optional.ofNullable(playerCell).map(element -> new WeeklyResult(week, element.text())); //REVIEW
+    }
+
+    private String weeklyResultUrl (final String week) {
+        return urlPrefix+"rankDate="+week+urlSuffix;
+    }
+
+    private static Element selectPlayerCellElement(final Document document) {
+        return document.getElementsByClass("player-cell").first();
+    }
+
+    private static String extractWeek(final Element li) {
+        return li.text().replaceAll("\\.", "-");
+    }
+
+    public static void main() throws IOException {
+        final Scraper scraper =
+                new Scraper("https://www.atptour.com/en/rankings/singles?", "&rankRange=0-100", Duration.ofSeconds(600));
+
+        List<WeeklyResult> weeklyResults = scraper.scrape();
+        System.out.println(weeklyResults);
+        for (final WeeklyResult weeklyResult : weeklyResults) {
+            System.out.println("Week: " + weeklyResult.getWeek() + " No.1: " + weeklyResult.getPlayerName());
         }
     }
 }
