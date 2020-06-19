@@ -5,8 +5,6 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 
-import javax.print.Doc;
-import javax.swing.plaf.synth.SynthEditorPaneUI;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
@@ -41,7 +39,7 @@ public class Scraper {
         return Jsoup.connect(url).timeout((int) timeout.toMillis()).get();
     }
 
-    private Elements selectRankingWeeksElements(final Document document) {
+    private static Elements selectRankingWeeksElements(final Document document) {
         // extract ranking weeks from the dropdown menu
         final Elements result = document.getElementsByAttributeValue("data-value", "rankDate")
                 .select("ul li");
@@ -69,7 +67,7 @@ public class Scraper {
     private List<WeeklyResult> loadResults(final List<String> weeks) throws IOException {
         final List<WeeklyResult> result = new ArrayList<>();
         for (String week : weeks) {
-            loadWeeklyResult(week).ifPresent(result::add); //REVIEW
+            loadWeeklyResult(week).ifPresent(result::add);
         }
         return result;
     }
@@ -77,8 +75,7 @@ public class Scraper {
     private Optional<WeeklyResult> loadWeeklyResult(final String week) throws IOException {
         final Document document = loadDocument(weeklyResultUrl(week));
         final Element playerCell = selectPlayerCellElement(document);
-
-        return Optional.ofNullable(playerCell).map(element -> new WeeklyResult(week, element.text())); //REVIEW
+        return Optional.ofNullable(playerCell).map(element -> new WeeklyResult(week, element.text()));
     }
 
     private String weeklyResultUrl (final String week) {
