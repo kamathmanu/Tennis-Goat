@@ -21,13 +21,13 @@ public class Scraper {
         this.timeout = timeout;
     }
 
-    private List<WeeklyResult> scrape() throws IOException {
+    private List<WeeklyResult> scrape() throws ScraperException {
         final List<String> weeks = loadWeeks();
 
         return loadResults(weeks);
     }
 
-    private List<String> loadWeeks() throws IOException {
+    private List<String> loadWeeks() throws ScraperException {
         final Document document = loadDocument(urlPrefix);
         final Elements elements = selectRankingWeeksElements(document);
         final List<String> weeks = extractWeeks(elements);
@@ -35,8 +35,12 @@ public class Scraper {
         return noEmptyElseThrow(weeks);
     }
 
-    private Document loadDocument(final String url) throws IOException {
-        return Jsoup.connect(url).timeout((int) timeout.toMillis()).get();
+    private Document loadDocument(final String url) throws ScraperException {
+        try {
+            return Jsoup.connect(url).timeout((int) timeout.toMillis()).get();
+        } catch (IOException e) {
+            throw new ScraperException("Error loading ATP website: " + e.toString());
+        }
     }
 
     private static Elements selectRankingWeeksElements(final Document document) {
@@ -53,18 +57,18 @@ public class Scraper {
         // and https://www.baeldung.com/java-maps-streams.
         return elements.stream()
                         .map(Scraper::extractWeek)
-                        .collect(Collectors.toList()); //REVIEW
+                        .collect(Collectors.toList());
     }
 
-    private static List<String> noEmptyElseThrow(final List<String> weeks) throws IOException{
+    private static List<String> noEmptyElseThrow(final List<String> weeks) throws ScraperException{
         if (weeks.isEmpty()) {
-            throw new IOException("Please provide a historical time range! Cannot rank otherwise!");
+            throw new ScraperException("Please provide a historical time range! Cannot rank otherwise!");
         } else {
             return weeks;
         }
     }
 
-    private List<WeeklyResult> loadResults(final List<String> weeks) throws IOException {
+    private List<WeeklyResult> loadResults(final List<String> weeks) throws ScraperException {
         final List<WeeklyResult> result = new ArrayList<>();
         for (String week : weeks) {
             loadWeeklyResult(week).ifPresent(result::add);
@@ -72,7 +76,7 @@ public class Scraper {
         return result;
     }
 
-    private Optional<WeeklyResult> loadWeeklyResult(final String week) throws IOException {
+    private Optional<WeeklyResult> loadWeeklyResult(final String week) throws ScraperException {
         final Document document = loadDocument(weeklyResultUrl(week));
         final Element playerCell = selectPlayerCellElement(document);
         return Optional.ofNullable(playerCell).map(element -> new WeeklyResult(week, element.text()));
@@ -90,7 +94,7 @@ public class Scraper {
         return li.text().replaceAll("\\.", "-");
     }
 
-    public static void main() throws IOException {
+    public static void main() throws ScraperException {
         final Scraper scraper =
                 new Scraper("https://www.atptour.com/en/rankings/singles?", "&rankRange=0-100", Duration.ofSeconds(600));
 
