@@ -96,7 +96,7 @@ public class Scraper {
 
     public static void main() throws ScraperException {
         final Scraper scraper =
-                new Scraper("https://www.atptour.com/en/rankings/singles?", "&rankRange=0-100", Duration.ofSeconds(600));
+                new Scraper("https://www.atptour.com/en/rankings/singles?", "&rankRange=0-100", Duration.ofSeconds(90));
 
         List<WeeklyResult> weeklyResults = scraper.scrape();
         System.out.println(weeklyResults);
