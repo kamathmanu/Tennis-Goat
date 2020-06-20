@@ -36,10 +36,23 @@ public class Scraper {
     }
 
     private Document loadDocument(final String url) throws ScraperException {
+        int retries = 2;
+        boolean loaded = false;
+        Document document = null;
+        while (retries >= 0 && !loaded) {
+            document = attemptToLoadDocument(url, retries);
+            if (document != null) loaded = true;
+            retries--;
+        }
+        return document;
+    }
+
+    private Document attemptToLoadDocument(final String url, final int retries) throws ScraperException {
         try {
             return Jsoup.connect(url).timeout((int) timeout.toMillis()).get();
         } catch (IOException e) {
-            throw new ScraperException ("Error loading ATP website: ", e);
+            final String retryMsg = retries == 0 ? "Connection terminated." : ".Retrying...";
+            throw new ScraperException ("Error loading ATP website: " + e.toString() + retryMsg);
         }
     }
 
