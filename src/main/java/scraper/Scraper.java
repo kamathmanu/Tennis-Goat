@@ -111,9 +111,7 @@ public class Scraper {
         final Scraper scraper =
                 new Scraper("https://www.atptour.com/en/rankings/singles?", "&rankRange=0-100", Duration.ofSeconds(90));
 
-        List<WeeklyResult> weeklyResults = scraper.scrape();
-        System.out.println(weeklyResults);
-        for (final WeeklyResult weeklyResult : weeklyResults) {
+        for (final WeeklyResult weeklyResult : scraper.scrape()) {
             System.out.println("Week: " + weeklyResult.getWeek() + " No.1: " + weeklyResult.getPlayerName());
         }
     }
