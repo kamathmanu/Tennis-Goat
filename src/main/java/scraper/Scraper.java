@@ -39,7 +39,7 @@ public class Scraper {
         try {
             return Jsoup.connect(url).timeout((int) timeout.toMillis()).get();
         } catch (IOException e) {
-            throw new ScraperException("Error loading ATP website: " + e.toString());
+            throw new ScraperException ("Error loading ATP website: ", e);
         }
     }
 
