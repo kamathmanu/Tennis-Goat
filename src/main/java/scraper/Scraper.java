@@ -51,8 +51,8 @@ public class Scraper {
         try {
             return Jsoup.connect(url).timeout((int) timeout.toMillis()).get();
         } catch (IOException e) {
-            final String retryMsg = retries == 0 ? "Connection terminated." : ".Retrying...";
-            throw new ScraperException ("Error loading ATP website: " + e.toString() + retryMsg);
+            final String retryMsg = retries == 0 ? "Connection terminated: " : ".Retrying: ";
+            throw new ScraperException ("Error loading ATP website: " + retryMsg, e);
         }
     }
 
@@ -75,7 +75,7 @@ public class Scraper {
 
     private static List<String> noEmptyElseThrow(final List<String> weeks) throws ScraperException{
         if (weeks.isEmpty()) {
-            throw new ScraperException("Please provide a historical time range! Cannot rank otherwise!");
+            throw new ScraperException("Cannot process empty data from the weeks calendar!");
         } else {
             return weeks;
         }
