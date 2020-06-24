@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Scraper {
+
     private final String urlPrefix;
     private final String urlSuffix;
     private final Duration timeout;
@@ -36,24 +37,16 @@ public class Scraper {
     }
 
     private Document loadDocument(final String url) throws ScraperException {
-        int retries = 2;
-        boolean loaded = false;
         Document document = null;
-        while (retries >= 0 && !loaded) {
-            document = attemptToLoadDocument(url, retries);
-            if (document != null) loaded = true;
-            retries--;
+        for (int tries = 0; tries < 3; tries++) {
+            try {
+                document = Jsoup.connect(url).timeout((int) timeout.toMillis()).get();
+                break;
+            } catch (IOException e) {
+                if (tries == 3) { throw new ScraperException ("Error loading ATP website: ", e);}
+            }
         }
         return document;
-    }
-
-    private Document attemptToLoadDocument(final String url, final int retries) throws ScraperException {
-        try {
-            return Jsoup.connect(url).timeout((int) timeout.toMillis()).get();
-        } catch (IOException e) {
-            final String retryMsg = retries == 0 ? "Connection terminated: " : ".Retrying: ";
-            throw new ScraperException ("Error loading ATP website: " + retryMsg, e);
-        }
     }
 
     private static Elements selectRankingWeeksElements(final Document document) {
@@ -109,8 +102,9 @@ public class Scraper {
 
     public static void main() throws ScraperException {
         final Scraper scraper =
-                new Scraper("https://www.atptour.com/en/rankings/singles?", "&rankRange=0-100", Duration.ofSeconds(90));
-
+                new Scraper("https://www.atptour.com/en/rankings/singles?",
+                        "&rankRange=0-100", Duration.ofSeconds(90));
+        
         for (final WeeklyResult weeklyResult : scraper.scrape()) {
             System.out.println("Week: " + weeklyResult.getWeek() + " No.1: " + weeklyResult.getPlayerName());
         }
