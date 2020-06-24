@@ -1,5 +1,9 @@
 package scraper;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.apache.logging.log4j.core.config.Configurator;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -11,7 +15,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class Scraper {
-
+    private static final Logger logger = LogManager.getRootLogger();
     private final String urlPrefix;
     private final String urlSuffix;
     private final Duration timeout;
@@ -104,9 +108,9 @@ public class Scraper {
         final Scraper scraper =
                 new Scraper("https://www.atptour.com/en/rankings/singles?",
                         "&rankRange=0-100", Duration.ofSeconds(90));
-        
+        Configurator.setRootLevel(Level.DEBUG);
         for (final WeeklyResult weeklyResult : scraper.scrape()) {
-            System.out.println("Week: " + weeklyResult.getWeek() + " No.1: " + weeklyResult.getPlayerName());
+            logger.debug("Week: " + weeklyResult.getWeek() + " No.1: " + weeklyResult.getPlayerName());
         }
     }
 }
