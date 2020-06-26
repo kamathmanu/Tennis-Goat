@@ -104,13 +104,10 @@ public class Scraper {
         return li.text().replaceAll("\\.", "-");
     }
 
-    public static void main() throws ScraperException {
+    public static List<WeeklyResult> main() throws ScraperException {
         final Scraper scraper =
                 new Scraper("https://www.atptour.com/en/rankings/singles?",
                         "&rankRange=0-100", Duration.ofSeconds(90));
-        Configurator.setRootLevel(Level.DEBUG);
-        for (final WeeklyResult weeklyResult : scraper.scrape()) {
-            logger.debug("Week: " + weeklyResult.getWeek() + " No.1: " + weeklyResult.getPlayerName());
-        }
+        return scraper.scrape();
     }
 }
