@@ -12,6 +12,8 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Scraper {
@@ -19,11 +21,13 @@ public class Scraper {
     private final String urlPrefix;
     private final String urlSuffix;
     private final Duration timeout;
+    private final int totalTries;
 
-    public Scraper(final String urlPrefix, final String urlSuffix, final Duration timeout) {
+    public Scraper(final String urlPrefix, final String urlSuffix, final Duration timeout, final int totalTries) {
         this.urlPrefix = urlPrefix;
         this.urlSuffix = urlSuffix;
         this.timeout = timeout;
+        this.totalTries = totalTries;
     }
 
     private List<WeeklyResult> scrape() throws ScraperException {
@@ -42,12 +46,12 @@ public class Scraper {
 
     private Document loadDocument(final String url) throws ScraperException {
         Document document = null;
-        for (int tries = 0; tries < 3; tries++) {
+        for (int tries = 0; tries < this.totalTries; tries++) {
             try {
                 document = Jsoup.connect(url).timeout((int) timeout.toMillis()).get();
                 break;
             } catch (IOException e) {
-                if (tries == 3) { throw new ScraperException ("Error loading ATP website: ", e);}
+                if (tries == this.totalTries) { throw new ScraperException ("Error loading ATP website: ", e);}
             }
         }
         return document;
@@ -60,6 +64,15 @@ public class Scraper {
 
         Collections.reverse(result);
         return result;
+    }
+
+    private static <T,R>Function<T,R> memoized(Function<T,R> func) {
+        // functional programming inspired method to memoize the results of (expensive, or one-off) functions.
+        // see: http://bendra.github.io/java/lambda/functional/memoization/guava/2014/12/08/functional-programing-memoziation-java-8.html
+        // NOTE: func must be a pure function for this to work, since we are assuming
+        // the result doesn't change once it is calculated once.
+        Map<T,R> map = new ConcurrentHashMap<T,R>();
+        return (t) -> map.computeIfAbsent(t, func);
     }
 
     private static List<String> extractWeeks(final Collection<Element> elements) {
@@ -104,10 +117,10 @@ public class Scraper {
         return li.text().replaceAll("\\.", "-");
     }
 
-    public static List<WeeklyResult> main() throws ScraperException {
+    public List<WeeklyResult> main() throws ScraperException {
         final Scraper scraper =
                 new Scraper("https://www.atptour.com/en/rankings/singles?",
-                        "&rankRange=0-100", Duration.ofSeconds(90));
+                        "&rankRange=0-100", Duration.ofSeconds(90), 3);
         return scraper.scrape();
     }
 }
