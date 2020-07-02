@@ -1,9 +1,7 @@
 package scraper;
 
-import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.apache.logging.log4j.core.config.Configurator;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -12,12 +10,10 @@ import org.jsoup.select.Elements;
 import java.io.IOException;
 import java.time.Duration;
 import java.util.*;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public class Scraper {
-    private static final Logger logger = LogManager.getRootLogger();
+    private static final Logger logger = LogManager.getLogger(Scraper.class);
     private final String urlPrefix;
     private final String urlSuffix;
     private final Duration timeout;
@@ -30,13 +26,13 @@ public class Scraper {
         this.totalTries = totalTries;
     }
 
-    private List<WeeklyResult> scrape() throws ScraperException {
-        final List<String> weeks = loadWeeks();
-
-        return loadResults(weeks);
+    public Optional<WeeklyResult> scrapeWeekly(final String week) throws ScraperException {
+        final Document document = loadDocument(weeklyResultUrl(week));
+        final Element playerCell = selectPlayerCellElement(document);
+        return Optional.ofNullable(playerCell).map(element -> new WeeklyResult(week, element.text()));
     }
 
-    private List<String> loadWeeks() throws ScraperException {
+    public List<String> loadWeeks() throws ScraperException {
         final Document document = loadDocument(urlPrefix);
         final Elements elements = selectRankingWeeksElements(document);
         final List<String> weeks = extractWeeks(elements);
@@ -66,20 +62,12 @@ public class Scraper {
         return result;
     }
 
-    private static <T,R>Function<T,R> memoized(Function<T,R> func) {
-        // functional programming inspired method to memoize the results of (expensive, or one-off) functions.
-        // see: http://bendra.github.io/java/lambda/functional/memoization/guava/2014/12/08/functional-programing-memoziation-java-8.html
-        // NOTE: func must be a pure function for this to work, since we are assuming
-        // the result doesn't change once it is calculated once.
-        Map<T,R> map = new ConcurrentHashMap<T,R>();
-        return (t) -> map.computeIfAbsent(t, func);
-    }
-
     private static List<String> extractWeeks(final Collection<Element> elements) {
         // refer to https://winterbe.com/posts/2014/07/31/java8-stream-tutorial-examples/
         // and https://www.baeldung.com/java-maps-streams.
         return elements.stream()
                         .map(Scraper::extractWeek)
+                        .filter(week -> Optional.ofNullable(week).isPresent())
                         .collect(Collectors.toList());
     }
 
@@ -89,20 +77,6 @@ public class Scraper {
         } else {
             return weeks;
         }
-    }
-
-    private List<WeeklyResult> loadResults(final List<String> weeks) throws ScraperException {
-        final List<WeeklyResult> result = new ArrayList<>();
-        for (String week : weeks) {
-            loadWeeklyResult(week).ifPresent(result::add);
-        }
-        return result;
-    }
-
-    private Optional<WeeklyResult> loadWeeklyResult(final String week) throws ScraperException {
-        final Document document = loadDocument(weeklyResultUrl(week));
-        final Element playerCell = selectPlayerCellElement(document);
-        return Optional.ofNullable(playerCell).map(element -> new WeeklyResult(week, element.text()));
     }
 
     private String weeklyResultUrl (final String week) {
@@ -115,12 +89,5 @@ public class Scraper {
 
     private static String extractWeek(final Element li) {
         return li.text().replaceAll("\\.", "-");
-    }
-
-    public List<WeeklyResult> main() throws ScraperException {
-        final Scraper scraper =
-                new Scraper("https://www.atptour.com/en/rankings/singles?",
-                        "&rankRange=0-100", Duration.ofSeconds(90), 3);
-        return scraper.scrape();
     }
 }

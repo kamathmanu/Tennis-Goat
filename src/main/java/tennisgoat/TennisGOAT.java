@@ -8,32 +8,41 @@ import scraper.Scraper;
 import scraper.ScraperException;
 import scraper.WeeklyResult;
 
+import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
+// Main class to manage the visualization of player's legacy rankings
 public class TennisGOAT {
     private static final Logger logger = LogManager.getRootLogger();
+
+    private static void utilizeScrapedResult(WeeklyResult weeklyResult) {
+        // pass the scraped result to the next stage of the visualization logic.
+        logger.info("Week: " + weeklyResult.getWeek() + " No.1: " + weeklyResult.getPlayerName());
+    }
 
     public static void main(String[] args) {
 
         Configurator.setRootLevel(Level.DEBUG);
 
-        // Scrape data off the ATP website
-        List<WeeklyResult> weeklyResults = Collections.emptyList();
+        final Scraper scraper =
+                new Scraper("https://www.atptour.com/en/rankings/singles?",
+                        "&rankRange=0-100", Duration.ofSeconds(90), 3);
+
+        // The flow is as follows: scrape the latest weekly results (starting from 1973),
+        // then pass it to the ranking logic (IPR). Rinse and repeat
         try {
-            weeklyResults = Scraper.main();
+            final List<String> weeks = scraper.loadWeeks();
+            for (String week: weeks) {
+                scraper.scrapeWeekly(week).ifPresent(result -> {
+                   utilizeScrapedResult(result);
+                });
+            }
         } catch (ScraperException e) {
             System.out.println(e.toString());
         }
-
-        // Check that this works
-        for (final WeeklyResult weeklyResult : weeklyResults) {
-            logger.debug("Week: " + weeklyResult.getWeek() + " No.1: " + weeklyResult.getPlayerName());
-        }
-
-        // Pass the weekly result to the rank allocator
-
-        
-
     }
 }
