@@ -28,8 +28,11 @@ public class Scraper {
 
     public Optional<WeeklyResult> scrapeWeekly(final String week) throws ScraperException {
         final Document document = loadDocument(weeklyResultUrl(week));
-        final Element playerCell = selectPlayerCellElement(document);
-        return Optional.ofNullable(playerCell).map(element -> new WeeklyResult(week, element.text()));
+        final boolean numberOneDataExists = selectNumberOneRankCell(document).isPresent();
+        final Element playerCell = numberOneDataExists ? selectPlayerCellElement(document) : null;
+
+        return Optional.ofNullable(playerCell)
+                .map(element -> new WeeklyResult(week, element.text()));
     }
 
     public List<String> loadWeeks() throws ScraperException {
@@ -47,7 +50,9 @@ public class Scraper {
                 document = Jsoup.connect(url).timeout((int) timeout.toMillis()).get();
                 break;
             } catch (IOException e) {
-                if (tries == this.totalTries) { throw new ScraperException ("Error loading ATP website: ", e);}
+                if (tries == this.totalTries) {
+                    throw new ScraperException("Error loading ATP website: ", e);
+                }
             }
         }
         return document;
@@ -66,12 +71,12 @@ public class Scraper {
         // refer to https://winterbe.com/posts/2014/07/31/java8-stream-tutorial-examples/
         // and https://www.baeldung.com/java-maps-streams.
         return elements.stream()
-                        .map(Scraper::extractWeek)
-                        .filter(week -> Optional.ofNullable(week).isPresent())
-                        .collect(Collectors.toList());
+                .map(Scraper::extractWeek)
+                .filter(week -> Optional.ofNullable(week).isPresent())
+                .collect(Collectors.toList());
     }
 
-    private static List<String> noEmptyElseThrow(final List<String> weeks) throws ScraperException{
+    private static List<String> noEmptyElseThrow(final List<String> weeks) throws ScraperException {
         if (weeks.isEmpty()) {
             throw new ScraperException("Cannot process empty data from the weeks calendar!");
         } else {
@@ -79,12 +84,25 @@ public class Scraper {
         }
     }
 
-    private String weeklyResultUrl (final String week) {
-        return urlPrefix+"rankDate="+week+urlSuffix;
+    private String weeklyResultUrl(final String week) {
+        return urlPrefix + "rankDate=" + week + urlSuffix;
+    }
+
+    private static Optional<Element> selectNumberOneRankCell(final Document document) {
+        final Element rankCell = selectPlayerRankCell(document);
+        return Optional.ofNullable(rankCell).filter(element -> numberOneRankCellExists(element));
     }
 
     private static Element selectPlayerCellElement(final Document document) {
         return document.getElementsByClass("player-cell").first();
+    }
+
+    private static boolean numberOneRankCellExists(final Element rankCell) {
+        return rankCell.text().equals("1");
+    }
+
+    private static Element selectPlayerRankCell(final Document document) {
+        return document.getElementsByClass("rank-cell").first();
     }
 
     private static String extractWeek(final Element li) {

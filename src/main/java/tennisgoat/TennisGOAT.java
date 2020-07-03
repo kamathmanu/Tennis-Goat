@@ -9,11 +9,7 @@ import scraper.ScraperException;
 import scraper.WeeklyResult;
 
 import java.time.Duration;
-import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.concurrent.CompletableFuture;
 
 // Main class to manage the visualization of player's legacy rankings
 public class TennisGOAT {
@@ -36,9 +32,9 @@ public class TennisGOAT {
         // then pass it to the ranking logic (IPR). Rinse and repeat
         try {
             final List<String> weeks = scraper.loadWeeks();
-            for (String week: weeks) {
+            for (String week : weeks) {
                 scraper.scrapeWeekly(week).ifPresent(result -> {
-                   utilizeScrapedResult(result);
+                    utilizeScrapedResult(result);
                 });
             }
         } catch (ScraperException e) {
