@@ -9,6 +9,7 @@ import org.jsoup.select.Elements;
 
 import java.io.IOException;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -18,15 +19,26 @@ public class Scraper {
     private final String urlSuffix;
     private final Duration timeout;
     private final int totalTries;
+    private WeeklyResult latestResult;
 
     public Scraper(final String urlPrefix, final String urlSuffix, final Duration timeout, final int totalTries) {
         this.urlPrefix = urlPrefix;
         this.urlSuffix = urlSuffix;
         this.timeout = timeout;
         this.totalTries = totalTries;
+        this.latestResult = new WeeklyResult("1973-08-16","N/A");
     }
 
-    public Optional<WeeklyResult> scrapeWeekly(final String week) throws ScraperException {
+    public WeeklyResult scrape(final String week) throws ScraperException {
+        // in the case the latest scraped data returns an "empty" weekly result, simply retain the latest No.1
+        // since it is likely he wouldn't have changed. A weekly result is deemed empty if no player or week info
+        // can be found on the ATP page.
+        this.latestResult = scrapeWeekly(week)
+                .orElse(new WeeklyResult(updateLatestWeekByOne(), this.latestResult.getPlayerName()));
+        return this.latestResult;
+    }
+
+    private Optional<WeeklyResult> scrapeWeekly(final String week) throws ScraperException {
         final Document document = loadDocument(weeklyResultUrl(week));
         final boolean numberOneDataExists = selectNumberOneRankCell(document).isPresent();
         final Element playerCell = numberOneDataExists ? selectPlayerCellElement(document) : null;
@@ -107,5 +119,9 @@ public class Scraper {
 
     private static String extractWeek(final Element li) {
         return li.text().replaceAll("\\.", "-");
+    }
+
+    private String updateLatestWeekByOne() {
+        return LocalDate.parse(this.latestResult.getWeek()).plusWeeks(1).toString();
     }
 }

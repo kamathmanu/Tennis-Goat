@@ -33,9 +33,8 @@ public class TennisGOAT {
         try {
             final List<String> weeks = scraper.loadWeeks();
             for (String week : weeks) {
-                scraper.scrapeWeekly(week).ifPresent(result -> {
-                    utilizeScrapedResult(result);
-                });
+                WeeklyResult weeklyResult =  scraper.scrape(week);
+                utilizeScrapedResult(weeklyResult);
             }
         } catch (ScraperException e) {
             System.out.println(e.toString());
