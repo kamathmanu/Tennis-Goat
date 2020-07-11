@@ -33,11 +33,12 @@ public class TennisGOAT {
         try {
             final List<String> weeks = scraper.loadWeeks();
             for (String week : weeks) {
+                logger.info(week);
                 WeeklyResult weeklyResult =  scraper.scrape(week);
                 utilizeScrapedResult(weeklyResult);
             }
         } catch (ScraperException e) {
-            System.out.println(e.toString());
+            logger.error(e.toString());
         }
     }
 }

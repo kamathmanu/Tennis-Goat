@@ -26,7 +26,7 @@ public class Scraper {
         this.urlSuffix = urlSuffix;
         this.timeout = timeout;
         this.totalTries = totalTries;
-        this.latestResult = new WeeklyResult("1973-08-16","N/A");
+        this.latestResult = new WeeklyResult("1973-08-16", "N/A");
     }
 
     public WeeklyResult scrape(final String week) throws ScraperException {
@@ -56,18 +56,16 @@ public class Scraper {
     }
 
     private Document loadDocument(final String url) throws ScraperException {
-        Document document = null;
         for (int tries = 0; tries < this.totalTries; tries++) {
             try {
-                document = Jsoup.connect(url).timeout((int) timeout.toMillis()).get();
-                break;
+                return Jsoup.connect(url).timeout((int) timeout.toMillis()).get();
             } catch (IOException e) {
                 if (tries == this.totalTries) {
                     throw new ScraperException("Error loading ATP website: ", e);
                 }
             }
         }
-        return document;
+        return null;
     }
 
     private static Elements selectRankingWeeksElements(final Document document) {
@@ -84,7 +82,6 @@ public class Scraper {
         // and https://www.baeldung.com/java-maps-streams.
         return elements.stream()
                 .map(Scraper::extractWeek)
-                .filter(week -> Optional.ofNullable(week).isPresent())
                 .collect(Collectors.toList());
     }
 
