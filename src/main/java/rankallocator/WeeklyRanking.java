@@ -3,16 +3,21 @@ package rankallocator;
 // Given a specific week, this class builds a
 // priority queue that ranks the players for that week
 
-public class WeeklyRanking {
-    // Need to update this to include a priority queue for 10 entries of the tuple <playerName, weeksAtNo1>
-    private final String playerName;
-    private final int totalWeeksAtNo1;
+import java.util.List;
+import java.util.PriorityQueue;
 
-    public WeeklyRanking(final String player, final int weeks) {
-        this.playerName = player;
-        this.totalWeeksAtNo1 = weeks;
+public class WeeklyRanking {
+    private PriorityQueue<PlayerRank> ranks;
+    public WeeklyRanking(final List<PlayerRank> playerRanks) {
+        this.ranks = new PriorityQueue<>(playerRanks);
     }
 
-    public String getPlayerName() { return playerName; }
-    public int getTotalWeeksAtNo1() { return totalWeeksAtNo1; }
+    public PriorityQueue<PlayerRank> getRanks() {
+        return ranks;
+    }
+
+    public void setRanks(PriorityQueue<PlayerRank> ranks) {
+        this.ranks = ranks;
+    }
+    // functions to write to file?
 }
