@@ -1,5 +1,6 @@
 package tennisgoat;
 
+import rankallocator.RankAllocator;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -14,15 +15,17 @@ import java.util.List;
 // Main class to manage the visualization of player's legacy rankings
 public class TennisGOAT {
     private static final Logger logger = LogManager.getRootLogger();
+    private static final RankAllocator allocator = new RankAllocator();
 
-    private static void utilizeScrapedResult(WeeklyResult weeklyResult) {
+    private static void generateRankingAllocation(WeeklyResult weeklyResult) {
         // pass the scraped result to the next stage of the visualization logic.
         logger.info("Week: " + weeklyResult.getWeek() + " No.1: " + weeklyResult.getPlayerName());
+        allocator.rank(weeklyResult);
     }
 
     public static void main(String[] args) {
 
-        Configurator.setRootLevel(Level.DEBUG);
+        Configurator.setRootLevel(Level.ERROR);
 
         final Scraper scraper =
                 new Scraper("https://www.atptour.com/en/rankings/singles?",
@@ -33,9 +36,9 @@ public class TennisGOAT {
         try {
             final List<String> weeks = scraper.loadWeeks();
             for (String week : weeks) {
-                logger.info(week);
+                logger.debug(week);
                 WeeklyResult weeklyResult =  scraper.scrape(week);
-                utilizeScrapedResult(weeklyResult);
+                generateRankingAllocation(weeklyResult);
             }
         } catch (ScraperException e) {
             logger.error(e.toString());
