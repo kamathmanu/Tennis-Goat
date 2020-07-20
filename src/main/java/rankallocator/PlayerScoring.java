@@ -16,5 +16,18 @@ public class PlayerScoring {
         return playerScorer;
     }
 
-    // functions to interface with the private hashmap
+    public PlayerValue findPlayerValue(final String player) {
+        return this.playerScorer.get(player);
+    }
+
+    public void updatePlayerValue (final String week, final String player) {
+        // if the player is a new No.1, construct a new entry
+        // otherwise, update (by one) his week tally
+        if (!this.playerScorer.containsKey(player)) {
+            this.playerScorer.put(player, new PlayerValue(week));
+        } else {
+            // Test to make sure values are updated properly
+            this.playerScorer.get(player).updateWeeksAtNumberOne();
+        }
+    }
 }
