@@ -1,23 +1,23 @@
 package rankallocator;
 
 // Given a specific week, this class builds a
-// priority queue that ranks the players for that week
+// list of the top ten (or the size of the queue, if lesser)
+// players for that week
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.PriorityQueue;
 
 public class WeeklyRanking {
-    private PriorityQueue<PlayerRank> ranks;
+    private final List<PlayerRank> ranks;
     public WeeklyRanking(final List<PlayerRank> playerRanks) {
-        this.ranks = new PriorityQueue<>(playerRanks);
+        // construct a list of the top 10 (max) players based on weeks at No.1
+        this.ranks = new ArrayList<>();
+        for (PlayerRank rank : playerRanks) {
+            this.ranks.add(rank);
+            if (this.ranks.size() == 10) {
+                break;
+            }
+        }
     }
-
-    public PriorityQueue<PlayerRank> getRanks() {
-        return ranks;
-    }
-
-    public void setRanks(PriorityQueue<PlayerRank> ranks) {
-        this.ranks = ranks;
-    }
-    // functions to write to file?
+    public List<PlayerRank> getRanks() { return ranks; }
 }

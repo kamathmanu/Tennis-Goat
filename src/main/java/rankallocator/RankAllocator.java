@@ -6,11 +6,11 @@ import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
 import scraper.WeeklyResult;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
-// This class combines all the collective actions of ranking the players for each week
+// This class combines all the collective actions of parsing a weekly result
+// and generating a weekly ranking of the No1 players for a given week.
 public class RankAllocator {
     private static final Logger logger = LogManager.getLogger(RankAllocator.class);
     private final PlayerScoring trackScores;
@@ -18,6 +18,7 @@ public class RankAllocator {
     public RankAllocator() {
         this.trackScores = new PlayerScoring();
     }
+    public PlayerScoring getTrackScores() { return this.trackScores; }
 
     public void updatePlayerScore(final WeeklyResult weeklyResult) {
         // given a weekly result, update the trackScores hashmap
@@ -25,24 +26,22 @@ public class RankAllocator {
     }
 
     private List<PlayerRank> collatePlayerScores() {
-        // Streams solution is more elegant. 
-        // combine the Key and Value of each entry of the trackScores hashmap.
-        List<PlayerRank> ranks = new ArrayList<>();
-        for (final Map.Entry<String, PlayerValue> playerValueEntry : trackScores.getPlayerScorer().entrySet()) {
-            final String name = playerValueEntry.getKey();
-            final PlayerValue score = playerValueEntry.getValue();
-            final PlayerRank entryRank = new PlayerRank(name, score);
-            ranks.add(entryRank);
-        }
+        // for each entry in trackScores, construct a new PlayerRank
+        // then return a list sorted in descending order by PlayerValue
+        List<PlayerRank> ranks =
+                (trackScores.getPlayerScorer().entrySet().stream()
+                        .map(entry -> new PlayerRank(entry.getKey(), entry.getValue())))
+                        .sorted(Comparator.comparingInt((PlayerRank player) ->
+                                player.getCurrentValue().getWeeksAtNumberOne()).reversed() //get descending order by weeks @ No.1
+                                .thenComparing(player -> player.getCurrentValue().getFirstReached())) //break ties based on who reached earlier
+                        .collect(Collectors.toList());
         return ranks;
     }
-
-    public PlayerScoring getTrackScores() { return this.trackScores; }
 
     public WeeklyRanking rank (final WeeklyResult weeklyResult) {
         Configurator.setLevel(logger.getName(), Level.ERROR);
         updatePlayerScore(weeklyResult);
-        logger.debug(this.trackScores.getPlayerScorer()); // quick check to see entries are being inserted. Refer to tests.
+        logger.debug(this.trackScores.getPlayerScorer());
         List<PlayerRank> weeklyScores = collatePlayerScores();
         return new WeeklyRanking(weeklyScores);
     }
