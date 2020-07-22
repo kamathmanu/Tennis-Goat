@@ -14,13 +14,15 @@ import java.util.stream.Collectors;
 public class RankAllocator {
     private static final Logger logger = LogManager.getLogger(RankAllocator.class);
     private final PlayerScoring trackScores;
+    private final int top_N; // display the top-N players for Weekly rankings.
 
-    public RankAllocator() {
+    public RankAllocator(final int N) {
+        this.top_N = N;
         this.trackScores = new PlayerScoring();
     }
     public PlayerScoring getTrackScores() { return this.trackScores; }
 
-    public void updatePlayerScore(final WeeklyResult weeklyResult) {
+    private void updatePlayerScore(final WeeklyResult weeklyResult) {
         // given a weekly result, update the trackScores hashmap
         this.trackScores.updatePlayerValue(weeklyResult.getWeek(), weeklyResult.getPlayerName());
     }
@@ -43,6 +45,6 @@ public class RankAllocator {
         updatePlayerScore(weeklyResult);
         logger.debug(this.trackScores.getPlayerScorer());
         List<PlayerRank> weeklyScores = collatePlayerScores();
-        return new WeeklyRanking(weeklyScores);
+        return new WeeklyRanking(weeklyScores, this.top_N);
     }
 }
