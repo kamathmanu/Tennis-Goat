@@ -9,12 +9,12 @@ import java.util.List;
 
 public class WeeklyRanking {
     private final List<PlayerRank> ranks;
-    public WeeklyRanking(final List<PlayerRank> playerRanks) {
-        // construct a list of the top 10 (max) players based on weeks at No.1
+    public WeeklyRanking(final List<PlayerRank> playerRanks, final int N) {
+        // construct a list of the top N (max) players based on weeks at No.1
         this.ranks = new ArrayList<>();
         for (PlayerRank rank : playerRanks) {
             this.ranks.add(rank);
-            if (this.ranks.size() == 10) {
+            if (this.ranks.size() == N) {
                 break;
             }
         }
