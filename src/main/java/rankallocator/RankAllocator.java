@@ -45,6 +45,6 @@ public class RankAllocator {
         updatePlayerScore(weeklyResult);
         logger.debug(this.trackScores.getPlayerScorer());
         List<PlayerRank> weeklyScores = collatePlayerScores();
-        return new WeeklyRanking(weeklyScores, this.top_N);
+        return new WeeklyRanking(weeklyResult.getWeek(), weeklyScores, this.top_N);
     }
 }
