@@ -24,16 +24,21 @@ public class TrackScoresTest extends TestCase {
     public void setUp() {
         this.allocator = new RankAllocator(5);
 
-        weeklyResults = new ArrayList<>();
-        weeklyResults.add(new WeeklyResult("2000-11-06", "Pete Sampras"));
-        weeklyResults.add(new WeeklyResult("2000-11-13", "Pete Sampras"));
-        weeklyResults.add(new WeeklyResult("2000-11-20", "Marat Safin"));
-        weeklyResults.add(new WeeklyResult("2000-11-27", "Marat Safin"));
-        weeklyResults.add(new WeeklyResult("2000-12-04", "Gustavo Kuerten"));
+        weeklyResults = setupResults();
 
         for (WeeklyResult weeklyResult : weeklyResults) {
             allocator.rank(weeklyResult);
         }
+    }
+
+    private List<WeeklyResult> setupResults() {
+        List<WeeklyResult> results = new ArrayList<>();
+        results.add(new WeeklyResult("2000-11-06", "Pete Sampras"));
+        results.add(new WeeklyResult("2000-11-13", "Pete Sampras"));
+        results.add(new WeeklyResult("2000-11-20", "Marat Safin"));
+        results.add(new WeeklyResult("2000-11-27", "Marat Safin"));
+        results.add(new WeeklyResult("2000-12-04", "Gustavo Kuerten"));
+        return results;
     }
 
     public void tearDown() {
