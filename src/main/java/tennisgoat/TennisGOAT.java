@@ -15,7 +15,7 @@ import java.util.List;
 // Main class to manage the visualization of player's legacy rankings
 public class TennisGOAT {
     private static final Logger logger = LogManager.getRootLogger();
-    private static final RankAllocator allocator = new RankAllocator();
+    private static final RankAllocator allocator = new RankAllocator(5);
 
     private static void generateRankingAllocation(WeeklyResult weeklyResult) {
         // pass the scraped result to the next stage of the visualization logic.
