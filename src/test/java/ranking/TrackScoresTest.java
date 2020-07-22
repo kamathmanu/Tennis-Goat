@@ -1,14 +1,10 @@
 package ranking;
 
-import rankallocator.PlayerValue;
 import rankallocator.RankAllocator;
 import junit.framework.TestCase;
 import org.junit.Test;
-import scraper.Scraper;
-import scraper.ScraperException;
 import scraper.WeeklyResult;
 
-import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +22,7 @@ public class TrackScoresTest extends TestCase {
     private List<WeeklyResult> weeklyResults;
 
     public void setUp() {
-        this.allocator = new RankAllocator();
+        this.allocator = new RankAllocator(5);
 
         weeklyResults = new ArrayList<>();
         weeklyResults.add(new WeeklyResult("2000-11-06", "Pete Sampras"));
@@ -36,7 +32,7 @@ public class TrackScoresTest extends TestCase {
         weeklyResults.add(new WeeklyResult("2000-12-04", "Gustavo Kuerten"));
 
         for (WeeklyResult weeklyResult : weeklyResults) {
-            allocator.updatePlayerScore(weeklyResult);
+            allocator.rank(weeklyResult);
         }
     }
 
