@@ -1,4 +1,4 @@
-package RankAllocator;
+package rankallocator;
 
 // POJO class to hold the "score" of a player,
 // which consists of the weeks they've spent at No.1,

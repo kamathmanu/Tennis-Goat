@@ -1,9 +1,12 @@
 package tennisgoat;
 
+import legacyvisualizer.LegacyVisualizer;
+import rankallocator.RankAllocator;
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.apache.logging.log4j.core.config.Configurator;
+import rankallocator.WeeklyRanking;
 import scraper.Scraper;
 import scraper.ScraperException;
 import scraper.WeeklyResult;
@@ -14,15 +17,28 @@ import java.util.List;
 // Main class to manage the visualization of player's legacy rankings
 public class TennisGOAT {
     private static final Logger logger = LogManager.getRootLogger();
+    private static final RankAllocator allocator = new RankAllocator(5);
+    private static final String dirName = System.getProperty("user.dir")+"/legacy";
+    private static final LegacyVisualizer visualizer = new LegacyVisualizer(dirName);
 
-    private static void utilizeScrapedResult(WeeklyResult weeklyResult) {
+    private static void generateRankingAllocation(WeeklyResult weeklyResult) {
         // pass the scraped result to the next stage of the visualization logic.
-        logger.info("Week: " + weeklyResult.getWeek() + " No.1: " + weeklyResult.getPlayerName());
+        logger.debug("Week: " + weeklyResult.getWeek() + " No.1: " + weeklyResult.getPlayerName());
+        WeeklyRanking weeklyRanking = allocator.rank(weeklyResult);
+        visualizer.visualize(weeklyRanking);
+    }
+
+    private static void consumeWeeklyRanking(WeeklyRanking weeklyRanking) {
+        //do something interesting with weekly rankings
+        //example of something decidedly not interesting
+        logger.info("Week of " + weeklyRanking.getWeek() + ": " +
+                weeklyRanking.getRanks().get(0).getPlayerName() + " leading the race with " +
+                weeklyRanking.getRanks().get(0).getCurrentValue().getWeeksAtNumberOne() + " weeks at No.1!");
     }
 
     public static void main(String[] args) {
 
-        Configurator.setRootLevel(Level.DEBUG);
+        Configurator.setRootLevel(Level.INFO);
 
         final Scraper scraper =
                 new Scraper("https://www.atptour.com/en/rankings/singles?",
@@ -33,9 +49,9 @@ public class TennisGOAT {
         try {
             final List<String> weeks = scraper.loadWeeks();
             for (String week : weeks) {
-                logger.info(week);
+                logger.debug(week);
                 WeeklyResult weeklyResult =  scraper.scrape(week);
-                utilizeScrapedResult(weeklyResult);
+                generateRankingAllocation(weeklyResult);
             }
         } catch (ScraperException e) {
             logger.error(e.toString());
